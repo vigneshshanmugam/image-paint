@@ -3,7 +3,6 @@
 
 <head>
     <meta charset="utf-8" />
-
     <style>
         body {
             display: block;
@@ -19,7 +18,6 @@
 
 <body>
     <script>
-
         function createTable(metrics) {
             var table = document.createElement('table');
             var thead = document.createElement('thead');
@@ -42,16 +40,14 @@
             return table;
         }
 
-
         addEventListener('load', () => {
             var imageUrl = "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=100&q=80&fit=crop";
-            var image_rt = window.performance.getEntriesByName(imageUrl)[0] || {};
 
             requestAnimationFrame(() => {
-                var timing = performance.timing;
                 var measures = performance.getEntriesByType("measure");
 
                 function report(measures, paints) {
+                    var image_rt = performance.getEntriesByName(imageUrl)[0] || {};
                     var metrics = {};
                     metrics['resource-timing'] = image_rt.responseEnd;
                     for (let i = 0; i < measures.length; i++) {
@@ -64,13 +60,14 @@
                     var table = createTable(metrics);
                     document.body.appendChild(table);
                 }
-
+                var attempts = 0;
                 (function pollPaintMetrics() {
+                    attempts++;
                     var paints = performance.getEntriesByType("paint");
-                    if (paints.length > 0) {
+                    if (paints.length > 0 || attempts >= 5) {
                         report(measures, paints);
                     } else {
-                        setTimeout(pollPaintMetrics, 20);
+                        setTimeout(pollPaintMetrics, 30);
                     }
                 })();
             });
