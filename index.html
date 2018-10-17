@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+
+    <style>
+        body {
+            display: block;
+            font-size: 36px;
+        }
+
+        thead {
+            text-decoration: underline;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+
+        function createTable(metrics) {
+            var table = document.createElement('table');
+            var thead = document.createElement('thead');
+            thead.textContent = "User Timing & Paint Metrics"
+            var tbody = document.createElement('tbody');
+            table.appendChild(thead);
+            table.appendChild(tbody);
+
+            for (var name in metrics) {
+                var tr = document.createElement('tr');
+                var td1 = document.createElement('td');
+                td1.textContent = name;
+                var td2 = document.createElement('td');
+                td2.textContent = Number(metrics[name]).toFixed(2);
+
+                tr.appendChild(td1);
+                tr.appendChild(td2);
+                tbody.appendChild(tr);
+            }
+            return table;
+        }
+
+
+        addEventListener('load', () => {
+            var imageUrl = "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=100&q=80&fit=crop";
+            var image_rt = window.performance.getEntriesByName(imageUrl)[0] || {};
+
+            requestAnimationFrame(() => {
+                var timing = performance.timing;
+                var measures = performance.getEntriesByType("measure");
+
+                function report(measures, paints) {
+                    var metrics = {};
+                    metrics['resource-timing'] = image_rt.responseEnd;
+                    for (let i = 0; i < measures.length; i++) {
+                        metrics[measures[i].name] = measures[i].duration;
+                    }
+                    for (let i = 0; i < paints.length; i++) {
+                        metrics[paints[i].name] = paints[i].startTime;
+                    }
+                    console.table(metrics);
+                    var table = createTable(metrics);
+                    document.body.appendChild(table);
+                }
+
+                (function pollPaintMetrics() {
+                    var paints = performance.getEntriesByType("paint");
+                    if (paints.length > 0) {
+                        report(measures, paints);
+                    } else {
+                        setTimeout(pollPaintMetrics, 20);
+                    }
+                })();
+            });
+        });
+    </script>
+    <img id="test_img" src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=100&q=80&fit=crop">
+    <script>
+        performance.measure("inline-script");
+        var img = document.getElementById("test_img");
+        img.onload = function () {
+            performance.measure('onload');
+            requestAnimationFrame(() => {
+                performance.measure('onload-rAF');
+            })
+        };
+    </script>
+</body>
+
+</html>
